@@ -1,57 +1,31 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
-
-<script>
-    import { darkMode } from '$lib/theme';
-    let isDark = false;
-
-    darkMode.subscribe((value) => (isDark = value));
-</script>
-
-<div class="flex items-center">
-    <label for="darkModeToggle" class="mr-2">Dark Mode</label>
-    <input
-        id="darkModeToggle"
-        type="checkbox"
-        bind:checked={isDark}
-        on:change={() => darkMode.set(isDark)}
-    />
-</div>
-
 <script>
     import { onMount } from 'svelte';
     import { supabase } from '$lib/supabase';
-    let tasks = [];
+    import { darkMode } from '$lib/theme';
 
+    let isDark = false;
+    let tasks = [];
+    let title = '';
+    let description = '';
+    let errorMessage = '';
+
+    // Subscribe to dark mode changes
+    darkMode.subscribe((value) => (isDark = value));
+
+    // Fetch tasks from Supabase
     const fetchTasks = async () => {
         const { data, error } = await supabase
             .from('tasks')
             .select('*')
             .order('start_time', { ascending: true });
-        if (error) console.error(error.message);
-        else tasks = data;
+        if (error) {
+            console.error(error.message);
+        } else {
+            tasks = data;
+        }
     };
 
-    onMount(() => {
-        fetchTasks();
-    });
-</script>
-
-<ul>
-    {#each tasks as task}
-        <li class="border p-4 rounded mb-4 dark:bg-gray-800 dark:text-white">
-            <h3 class="text-lg font-bold">{task.title}</h3>
-            <p>{task.description}</p>
-            <p>{new Date(task.start_time).toLocaleString()}</p>
-        </li>
-    {/each}
-</ul>
-
-<script>
-    let title = '';
-    let description = '';
-    let errorMessage = '';
-
+    // Add a new task
     const addTask = async () => {
         if (!title.trim()) {
             errorMessage = 'Task title is required';
@@ -68,7 +42,27 @@
             fetchTasks(); // Refresh the task list
         }
     };
+
+    // Fetch tasks on component mount
+    onMount(() => {
+        fetchTasks();
+    });
 </script>
+
+<h1>Welcome to SvelteKit</h1>
+<p>
+    Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation
+</p>
+
+<div class="flex items-center">
+    <label for="darkModeToggle" class="mr-2">Dark Mode</label>
+    <input
+        id="darkModeToggle"
+        type="checkbox"
+        bind:checked={isDark}
+        on:change={() => darkMode.set(isDark)}
+    />
+</div>
 
 <form on:submit|preventDefault={addTask} class="mb-4">
     <input
@@ -95,3 +89,12 @@
     <p class="text-red-500">{errorMessage}</p>
 {/if}
 
+<ul>
+    {#each tasks as task}
+        <li class="border p-4 rounded mb-4 dark:bg-gray-800 dark:text-white">
+            <h3 class="text-lg font-bold">{task.title}</h3>
+            <p>{task.description}</p>
+            <p>{new Date(task.start_time).toLocaleString()}</p>
+        </li>
+    {/each}
+</ul>
